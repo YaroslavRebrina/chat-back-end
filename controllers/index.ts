@@ -1,6 +1,7 @@
-import { Request, Response } from "express";
-import { OpenAIApi, Configuration } from "openai";
-import dotenv from "dotenv";
+import { Request, Response } from 'express';
+import { OpenAIApi, Configuration } from 'openai';
+import dotenv from 'dotenv';
+import { getRecommendations } from './utils';
 
 dotenv.config();
 
@@ -18,30 +19,13 @@ const currentMessages = [];
 
 // Controller function to handle chat conversation
 export const generateResponse = async (req: Request, res: Response) => {
+  const result = getRecommendations({ dishName: req.body.prompt });
+
+
   try {
-    const { prompt } = req.body;
-    const modelId = "gpt-3.5-turbo";
-    const promptText = `${prompt}\n\nResponse:`;
-
-    // Restore the previous context
-    for (const [inputText, responseText] of conversationContext) {
-      currentMessages.push({ role: "user", content: inputText });
-      currentMessages.push({ role: "assistant", content: responseText });
-    }
-
-    // Stores the new message
-    currentMessages.push({ role: "user", content: promptText });
-
-    const result = await openai.createChatCompletion({
-      model: modelId,
-      messages: currentMessages,
-    });
-
-    const responseText = result.data.choices.shift().message.content;
-    conversationContext.push([promptText, responseText]);
-    res.send({ response: responseText });
+    res.status(200).json(result);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Internal server error" });
+    console.log(err);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
